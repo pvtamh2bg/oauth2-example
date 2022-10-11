@@ -1,24 +1,24 @@
 package handlers
 
 import (
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"net/http"
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"context"
 	"log"
-	"encoding/base64"
-	"crypto/rand"
-	"os"
+	"net/http"
 	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 // Scopes: OAuth 2.0 scopes provide a way to limit the amount of access that is granted to an access token.
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  "http://localhost:8000/auth/google/callback",
-	ClientID:     os.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
-	ClientSecret: os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+	RedirectURL:  "http://localhost:3000/auth/google/callback",
+	ClientID:     "347476482387-oiab73t4pr4fa3vofg2vs728u36gmn41.apps.googleusercontent.com",
+	ClientSecret: "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",
 	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 	Endpoint:     google.Endpoint,
 }
@@ -31,8 +31,8 @@ func oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	oauthState := generateStateOauthCookie(w)
 
 	/*
-	AuthCodeURL receive state that is a token to protect the user from CSRF attacks. You must always provide a non-empty string and
-	validate that it matches the the state query parameter on your redirect callback.
+		AuthCodeURL receive state that is a token to protect the user from CSRF attacks. You must always provide a non-empty string and
+		validate that it matches the the state query parameter on your redirect callback.
 	*/
 	u := googleOauthConfig.AuthCodeURL(oauthState)
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
@@ -80,6 +80,7 @@ func getUserDataFromGoogle(code string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
 	}
+	fmt.Println(token.AccessToken)
 	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
